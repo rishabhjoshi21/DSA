@@ -5,5 +5,5 @@
  */
 var smallestNumber = function(n, t) {
     
-    console.log(typeof n+"")
+    console.log(typeof ""+n)
 };
