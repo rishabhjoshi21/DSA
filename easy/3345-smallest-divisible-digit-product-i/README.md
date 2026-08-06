@@ -41,9 +41,9 @@ Constraints:
 ## Solution
 
 **Language:** JavaScript  
-**Runtime:** 0 ms  
-**Memory:** 53.4 MB  
-**Submitted:** 2026-08-06T18:35:24.807Z  
+**Runtime:** 1 ms (beats 45.45%)  
+**Memory:** 56.1 MB (beats 27.27%)  
+**Submitted:** 2026-08-06T18:36:54.015Z  
 
 ```js
 /**
@@ -52,19 +52,26 @@ Constraints:
  * @return {number}
  */
 var smallestNumber = function(n, t) {
-    const num = n.toString();
-    const multi = num[0] * num[1];
-    if(n<10) {
-        if(n%t === 0){
-            return n
-        }else{
-            return smallestNumber(n+1,t)
+    while (true) {
+        let product = 1;
+        let temp = n;
+        
+        // Extract digits mathematically
+        while (temp > 0) {
+            product *= temp % 10;
+            
+            // Early exit: if product becomes 0, it is divisible by any 't'
+            if (product === 0) break; 
+            
+            temp = Math.floor(temp / 10);
         }
-    }
-    if(multi%t === 0){
-        return n
-    }else{
-        return smallestNumber(n+1,t)
+        
+        // Check if the condition is met
+        if (product % t === 0) {
+            return n;
+        }
+        
+        n++; // Move to the next number
     }
     
 };
