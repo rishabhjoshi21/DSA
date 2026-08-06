@@ -41,9 +41,9 @@ Constraints:
 ## Solution
 
 **Language:** JavaScript  
-**Runtime:** 0 ms  
-**Memory:** 53.9 MB  
-**Submitted:** 2026-08-06T18:16:47.120Z  
+**Runtime:** 1 ms  
+**Memory:** 52.9 MB  
+**Submitted:** 2026-08-06T18:18:21.192Z  
 
 ```js
 /**
@@ -53,7 +53,7 @@ Constraints:
  */
 var smallestNumber = function(n, t) {
     
-    console.log(typeof ""+n)
+    console.log(typeof n.toString())
 };
 
 ```
