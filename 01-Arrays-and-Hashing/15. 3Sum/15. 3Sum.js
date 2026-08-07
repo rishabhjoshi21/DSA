@@ -1,0 +1,1 @@
+   // sort numbers   nums.sort((a,b)=> a-b);   // take pointers at i, i+1 and nums.length-1    const res = []   for(let i = 0; i<nums.length; i++){        // skip same numbers from left        if(i>0 && nums[i]===nums[i-1]){            continue        }        let left = i+1;        let right = nums.length -1
