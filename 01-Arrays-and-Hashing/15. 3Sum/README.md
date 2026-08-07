@@ -55,29 +55,7 @@ However, if you first arrange all items in ascending numeric order on a long tab
 
 By sorting the array first, we transform a 3-variable problem into $N$ standard Two-Pointer search sub-problems, bypassing the need for nested triple loops.
 
-### Algorithm Visualized
 
-```mermaid
-graph TD
-    A[Start: Array Unsorted] --> B[Sort Array Ascending: nums.sort]
-    B --> C[Initialize Result Array res = []]
-    C --> D[Outer Loop: Iterate i from 0 to nums.length - 1]
-    D --> E{i > 0 AND nums[i] == nums[i-1]?}
-    E -- Yes: Skip Duplicate --> D
-    E -- No --> F[Initialize Two Pointers: left = i + 1, right = nums.length - 1]
-    F --> G{Is left < right?}
-    G -- No --> D
-    G -- Yes --> H[Calculate sum = nums[i] + nums[left] + nums[right]]
-    H --> I{sum == 0?}
-    I -- Yes --> J[Push [nums[i], nums[left], nums[right]] to res]
-    J --> K[Advance left & right while skipping duplicates]
-    K --> G
-    I -- No: sum < 0 --> L[Increment left pointer]
-    L --> G
-    I -- No: sum > 0 --> M[Decrement right pointer]
-    M --> G
-    D -- Loop Finished --> N[Return res]
-```
 
 ### Approach
 1. **Sort the Input Array**: Sort `nums` in ascending order using JavaScript's native sort with a numeric comparator `(a, b) => a - b`.
