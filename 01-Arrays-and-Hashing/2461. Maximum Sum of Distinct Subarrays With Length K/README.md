@@ -50,128 +50,94 @@ We return 0 because no subarrays meet the conditions.
 ## Approach 1: Dynamic Sliding Window with Hash Set
 
 ### Intuition
-Imagine you are managing a moving window of $K$ consecutive items on a conveyor belt, and every item in your window must be unique. If a duplicate item arrives at the right end, your window becomes invalid. To fix this, you must continuously discard items from the left side of the window until the duplicate item is removed. 
+Imagine you are managing a fixed-capacity display shelf that can hold exactly $k$ items at a time, and your goal is to maximize the total value of the items on display. However, there is a strict rule: **no duplicate items are allowed on the shelf**.
 
-Once your window reaches exactly length $K$ without any duplicate items, you record its sum. Then, to make room for the next element on the conveyor belt, you eject the leftmost element and slide the window forward.
-
-Using a **Hash Set** gives us $\mathcal{O}(1)$ lookup time to immediately detect duplicates, while maintaining a running total (`totalSum`) allows us to calculate window sums in constant time without re-summing all $K$ elements.
-
-### Algorithm Visualized
-
-```mermaid
-flowchart TD
-    Start([Start: Loop right < nums.length]) --> DuplicateCheck{Set contains<br/>nums[right]?}
-    
-    DuplicateCheck -- Yes: Duplicate Detected --> ShrinkLeft[Remove nums[left] from Set<br/>Subtract nums[left] from totalSum<br/>left++]
-    ShrinkLeft --> DuplicateCheck
-
-    DuplicateCheck -- No: Unique Element --> Insert[Add nums[right] to Set<br/>Add nums[right] to totalSum]
-    
-    Insert --> LengthCheck{Window Length<br/>right - left + 1 == k?}
-    
-    LengthCheck -- Yes: Valid Subarray of Size K --> RecordMax[result = Math.max(result, totalSum)]
-    RecordMax --> SlideLeft[Remove nums[left] from Set<br/>Subtract nums[left] from totalSum<br/>left++]
-    SlideLeft --> IncrementRight[right++]
-    
-    LengthCheck -- No: Window Size < K --> IncrementRight
-    
-    IncrementRight --> Start
-```
+As new items arrive sequentially on a conveyor belt (`nums[right]`), you want to place them onto the shelf. If an incoming item is already on your shelf, you cannot accept it immediately. You must first remove items from the opposite end of the shelf (`nums[left]`), one by one, until the identical item is gone. Once the duplicate is cleared, you add the new item. Whenever your shelf reaches capacity $k$, you calculate the total value on display, record it if it is the highest sum seen so far, and then remove the oldest item from the shelf to keep room for future items.
 
 ### Approach
-1. **Initialize State Tracker & Pointers**: Maintain two pointers (`left` and `right`) to define the boundary of the sliding window. Use a `Set` to track the unique elements within the current window and a scalar variable `totalSum` to track the running sum of the current window.
-2. **Expand Window (`right` pointer)**:
-   - Before adding `nums[right]`, check if it already exists in the `Set`.
-   - If it exists, repeatedly remove `nums[left]` from the `Set`, subtract `nums[left]` from `totalSum`, and increment `left` until `nums[right]` is no longer in the set.
-3. **Include Current Element**: Add `nums[right]` to the `Set` and add its value to `totalSum`.
-4. **Evaluate Window Condition**:
-   - Check if the current window size (`right - left + 1`) equals $K$.
-   - If it equals $K$, update `result` with `Math.max(result, totalSum)`.
-   - Shrink the window from the left by one step (`totalSum -= nums[left]`, `set.delete(nums[left])`, `left++`) to prepare for the next iteration.
-5. **Advance**: Increment `right` and repeat until the end of the array is reached.
+1. **Pointers & State Tracking**: Maintain a dynamic sliding window using two pointers, `left` and `right`. Track the sum of the current window using `totalSum`, store the maximum valid sum found so far in `result`, and use a JavaScript `Set` to enforce element uniqueness in $O(1)$ lookup time.
+2. **Duplicate Resolution**: As `right` iterates through `nums`, check if `nums[right]` already exists in the set. If it does, shrink the window from the left by removing `nums[left]` from `totalSum` and `set`, and incrementing `left` until the duplicate is removed.
+3. **Window Expansion**: Add `nums[right]` to `set` and add its value to `totalSum`.
+4. **Window Shrinking & Result Update**: If the current window size (`right - left + 1`) equals $k$:
+   - Update `result` with `Math.max(result, totalSum)`.
+   - Remove `nums[left]` from `totalSum` and `set`, then increment `left` to shift the fixed window forward.
+5. **Iteration**: Increment `right` to process the next element.
 
 ### Detailed Code Analysis
 
-Let's break down the logic execution block by block:
+- **Lines 6–11: Initialization**
+  ```javascript
+  let left = 0;
+  let right = 0;
+  let totalSum = 0;
+  let result = 0;
+  const set = new Set();
+  ```
+  We initialize `left` and `right` to index `0` to track the bounds of our subarray. `totalSum` stores the sum of elements within `[left, right]`. `result` holds our global maximum sum for a valid subarray of length $k$. `set` allows $O(1)$ duplicate checking and management.
 
-```javascript
-1  /**
-2   * @param {number[]} nums
-3   * @param {number} k
-4   * @return {number}
-5   */
-6  var maximumSubarraySum = function(nums, k) {
-7      let left = 0;
-8      let right = 0;
-9      let totalSum = 0;
-10     let result = 0;
-11     let set = new Set();
-```
-* **Lines 7–11**: We initialize our pointers `left` and `right` at index `0`. `totalSum` tracks the sum of elements currently in the window, `result` holds the maximum sum found so far, and `set` keeps track of the distinct elements inside the `[left, right]` range.
+- **Lines 12–17: Main Loop & Duplicate Eviction**
+  ```javascript
+  while (right < nums.length) {
+      while (set.has(nums[right])) {
+          totalSum -= nums[left];
+          set.delete(nums[left]);
+          left++;
+      }
+  ```
+  The outer loop iterates through the array via `right`. Before adding `nums[right]`, the inner `while` loop checks if `nums[right]` is already in `set`. If a duplicate is detected, `left` shifts rightward, shrinking the window, subtracting `nums[left]` from `totalSum`, and deleting `nums[left]` from `set` until `nums[right]` can be added uniquely.
 
-```javascript
-12     while(right < nums.length){
-13         while(set.has(nums[right])){
-14             totalSum -= nums[left];
-15             set.delete(nums[left]);
-16             left++;
-17         }
-```
-* **Lines 12–17**: The outer loop drives the right pointer through the array. Line 13 handles **duplicate resolution**. If `nums[right]` is already in our window (tracked by `set`), we must contract the window from the left. Lines 14–16 subtract `nums[left]` from `totalSum`, remove `nums[left]` from the `set`, and increment `left`. This inner loop runs until `nums[right]` can be safely added without violating the uniqueness constraint.
+- **Lines 18–19: Adding New Element**
+  ```javascript
+      set.add(nums[right]);
+      totalSum += nums[right];
+  ```
+  Once uniqueness is guaranteed, `nums[right]` is added to both `set` and `totalSum`.
 
-```javascript
-18         set.add(nums[right]);
-19         totalSum += nums[right];
-```
-* **Lines 18–19**: Once all duplicates of `nums[right]` are evicted from the window, `nums[right]` is added to both the `set` and the running `totalSum`.
+- **Lines 20–25: Target Length Handling**
+  ```javascript
+      if (right - left + 1 === k) {
+          result = Math.max(totalSum, result);
+          totalSum -= nums[left];
+          set.delete(nums[left]);
+          left++;
+      }
+  ```
+  We check if our current window has reached the desired length $k$. If it has:
+  1. We update `result` if `totalSum` is larger than the previously recorded `result`.
+  2. Because the window cannot exceed length $k$, we immediately evict the leftmost element `nums[left]` from `totalSum` and `set`, and increment `left` to prepare for the next iteration.
 
-```javascript
-20         if(right - left + 1 === k){
-21             result = Math.max(totalSum, result);
-22             totalSum -= nums[left];
-23             set.delete(nums[left]);
-24             left++;
-25         }
-26         right++;
-27     }
-28     return result;
-29 };
-```
-* **Lines 20–25**: Check if the dynamic window length `right - left + 1` reaches $K$.
-  * Line 21: Update `result` with the maximum sum encountered.
-  * Lines 22–24: Since we only care about subarrays of *exact* length $K$, we manually pop the leftmost element out of the window (`totalSum -= nums[left]`, `set.delete(nums[left])`, `left++`) so that the next expansion of `right` keeps testing contiguous windows.
-* **Line 26**: Move `right` to expand the window forward.
-* **Line 28**: Returns `result`, which defaults to `0` if no valid contiguous subarray of length $K$ with distinct elements was found.
+- **Lines 26–29: Pointer Advancement & Return**
+  ```javascript
+      right++;
+  }
+  return result;
+  ```
+  We advance `right` to process the next incoming element. Once the outer loop completes, `result` holds the maximum sum of any distinct subarray of length $k$, which is returned.
 
 ### Code
-
 ```javascript
 /**
  * @param {number[]} nums
  * @param {number} k
  * @return {number}
  */
-var maximumSubarraySum = function(nums, k) {
+var maximumSubarraySum = function (nums, k) {
     let left = 0;
     let right = 0;
     let totalSum = 0;
     let result = 0;
-    let set = new Set();
+    const set = new Set();
 
-    while(right < nums.length){
-        // Shrink window from the left until the duplicate element is removed
-        while(set.has(nums[right])){
+    while (right < nums.length) {
+        while (set.has(nums[right])) {
             totalSum -= nums[left];
             set.delete(nums[left]);
             left++;
         }
-        
-        // Add the current element to the set and running sum
         set.add(nums[right]);
         totalSum += nums[right];
-        
-        // If window size reaches exactly K, evaluate and slide left pointer
-        if(right - left + 1 === k){
+
+        if (right - left + 1 === k) {
             result = Math.max(totalSum, result);
             totalSum -= nums[left];
             set.delete(nums[left]);
@@ -179,25 +145,21 @@ var maximumSubarraySum = function(nums, k) {
         }
         right++;
     }
-    
+
     return result;
 };
 ```
 
 ### Complexity
-
-- **Time Complexity:** $\mathcal{O}(N)$
-  Although there is a nested `while` loop (Lines 13–17), both `left` and `right` pointers traverse the array from index `0` to $N - 1$ at most once. Each element is added to the `Set` once and deleted from the `Set` at most once. Thus, operations inside the loops run in amortized $\mathcal{O}(1)$ time, yielding a total runtime of $\mathcal{O}(N)$.
-
-- **Space Complexity:** $\mathcal{O}(\min(N, K))$
-  The auxiliary space is dominated by the Hash Set. The set stores at most $K$ elements at any time because whenever the window length hits $K$, we immediately remove an element from the left. Thus, the space complexity is bounded by $\mathcal{O}(K)$ (or $\mathcal{O}(N)$ if $K \ge N$).
+- **Time Complexity:** $\mathcal{O}(N)$, where $N$ is the number of elements in `nums`. Although there is a nested `while` loop, each element is inserted into and deleted from the `Set` at most once. The `left` and `right` pointers both travel from `0` to $N$ independently.
+- **Space Complexity:** $\mathcal{O}(\min(N, k))$ auxiliary space. The `Set` stores at most $k$ elements at any point, as the window size is bounded by $k$.
 
 ---
 
 ## 🕵️‍♂️ Follow-up Questions
 
-### 1. How would you handle primitive integer overflow if this problem were implemented in C++ or Java?
-In languages like C++ or Java, `nums[i]` can be up to $10^5$ and $K$ up to $10^5$. The maximum possible subarray sum is $10^5 \times 10^5 = 10^{10}$, which exceeds the $32$-bit signed integer limit ($\approx 2 \times 10^9$). To prevent integer overflow, `totalSum` and `result` must be declared as `long long` (C++) or `long` (Java). In JavaScript, standard numbers are IEEE 754 double-precision floats that represent integers safely up to $2^{53} - 1 \approx 9 \times 10^{15}$, so overflow is not an issue here.
+### 1. How would you optimize space if the values in `nums` were restricted to a small range (e.g., $1 \le \text{nums}[i] \le 10^5$)?
+**Answer:** Instead of using a generic hash `Set`, we could use a fixed-size integer array or `Uint32Array` as a frequency map or index map. Checking and updating values in a contiguous array eliminates object allocation overhead and hash collisions, improving cache locality and performance in environments like V8.
 
-### 2. Can we optimize the Hash Set overhead further if memory allocation is a concern?
-Yes. Hash Set operations in standard JS engines carry a non-trivial memory and execution overhead due to hashing and object allocations. If the range of values in `nums` is bounded (e.g., $1 \le nums[i] \le 10^5$), we can replace `Set` with a fixed-size `Uint8Array` or boolean frequency array. Checking and updating an indexed typed array is significantly faster than using native set methods (`set.has`, `set.add`, `set.delete`).
+### 2. Can we optimize duplicate handling to jump `left` directly instead of shrinking one element at a time?
+**Answer:** Yes. Instead of storing elements in a `Set` and removing them one by one in a inner loop, we can store each element's most recent index in a Hash Map (`Map<number, number>`). When a duplicate `nums[right]` is seen at index `prevIdx`, if `prevIdx >= left`, we can instantly set `left = prevIdx + 1`. However, calculating `totalSum` in $O(1)$ during direct jumps requires either a prefix sum array or subtracting elements during the jump.
