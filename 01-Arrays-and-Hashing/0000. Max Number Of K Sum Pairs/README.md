@@ -1,4 +1,4 @@
-<h2><a href="https://leetcode.com/problems/max-number-of-k-sum-pairs">0000. Max Number Of K Sum Pairs</a></h2>
+<h2><a href="https://leetcode.com/problems/max-number-of-k-sum-pairs">1679. Max Number Of K Sum Pairs</a></h2>
 
 <p>You are given an integer array <code>nums</code> and an integer <code>k</code>.</p>
 
